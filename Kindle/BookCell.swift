@@ -10,30 +10,52 @@ import UIKit
 
 class BookCell: UITableViewCell {
     
-    let coverImageView: UIImageView = {
+    var book: Book? {
+        didSet {
+            titleLabel.text = book?.title
+            authorLabel.text = book?.author
+            
+            guard let coverImageUrl = book?.coverImageUrl else { return }
+            guard let url = URL(string: coverImageUrl) else { return }
+            
+            coverImageView.image = nil
+            
+            URLSession.shared.dataTask(with: url) { (data, response, error) in
+                
+                if let err = error{
+                    print("Failed to retrieve our book cover image: ", err)
+                    return
+                }
+                
+                guard let imageData = data else { return }
+                let image = UIImage(data: imageData)
+                
+                DispatchQueue.main.async {
+                    self.coverImageView.image = image
+                }
+                
+            }.resume()
+        }
+    }
+    
+    private let coverImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.backgroundColor = .red
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.image = #imageLiteral(resourceName: "steve_jobs")
-        
         return imageView
     }()
     
-    let titleLabel: UILabel = {
+    private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "this is the text for the book"
-        label.backgroundColor = .blue
         label.translatesAutoresizingMaskIntoConstraints = false
-        
         return label
     }()
     
-    let authorLabel: UILabel = {
+    private let authorLabel: UILabel = {
         let label = UILabel()
         label.text = "this is the name of the author of the book"
-        label.backgroundColor = .green
         label.translatesAutoresizingMaskIntoConstraints = false
-        
         return label
     }()
     
@@ -58,10 +80,6 @@ class BookCell: UITableViewCell {
         authorLabel.leftAnchor.constraint(equalTo: coverImageView.rightAnchor, constant: 8).isActive = true
         authorLabel.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -8).isActive = true
         authorLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        
-        
-
-        
         
     }
     
